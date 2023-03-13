@@ -1,5 +1,5 @@
 # AngularAppExample
-A step by step angular application building
+A step by step angular application building regarding TDD method.
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.1.5.
 
