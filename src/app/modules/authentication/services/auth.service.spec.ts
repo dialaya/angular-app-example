@@ -12,6 +12,7 @@ describe('AuthService', () => {
   let httpClient: HttpClient;
   let router: Router;
   let httpTestingController: HttpTestingController;
+  let spyLocalStorageSetItem: any;
 
   beforeEach(async () => {
 
@@ -31,6 +32,11 @@ describe('AuthService', () => {
   beforeEach(() => {
     httpClient = TestBed.inject(HttpClient);
     router = TestBed.inject(Router);
+
+    // not working: https://github.com/facebook/jest/issues/6858
+    // const spyLocalStorageSetItem = jest.spyOn(localStorage, 'setItem');
+    spyLocalStorageSetItem = jest.spyOn(Storage.prototype, 'setItem');
+    spyLocalStorageSetItem.mockImplementation(jest.fn());
   });
 
   it('should be created and listen to window add event and remove', () => {
@@ -48,11 +54,6 @@ describe('AuthService', () => {
   });
 
   it('should save authentication result into localstorage', () => {
-    
-    // not working: https://github.com/facebook/jest/issues/6858
-    // const spyLocalStorageSetItem = jest.spyOn(localStorage, 'setItem');
-    const spyLocalStorageSetItem = jest.spyOn(Storage.prototype, 'setItem');
-    spyLocalStorageSetItem.mockImplementation(jest.fn());
 
     const accessTokenValue = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkJha2FyeSBEamliYSIsImlhdCI6MTUxNjI3OTAyMn0.7riR0auHzQubc_VUhZXDtn6sTbu0z4-zoRCvgCCAGFk';
     const refreshTokenValue = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ7';
@@ -130,8 +131,25 @@ describe('AuthService', () => {
   });
 
   it('should return an auth result when logged with login and password', (done) => {
+    const authoResult = {
+      login: 'dialaya',
+      roles: ['MGR', 'ADM'],
+      firstname: 'Bakary',
+      lastname: 'Djiba',
+      accessToken: 'authoToken',
+      refreshToken: 'newRefreshToken'
+    };
+    const spyHttpClientPost = jest.spyOn(httpClient, 'post');
+    spyHttpClientPost.mockImplementation(() => of(authoResult));
     service = TestBed.inject(AuthService);
-    const refreshedResult = service.login('dialaya', 'DmyPwd');
+    const refreshedResultObservable = service.login('dialaya', 'DmyPwd');
+    refreshedResultObservable.subscribe(refreshedResult => {
+      expect(refreshedResult).toBeDefined();
+      expect(spyHttpClientPost).toHaveBeenCalledWith(expect.stringContaining('/login'),expect.objectContaining({username: 'dialaya'}));
+      // TODO: check login notif, storage
+      //expect(spyLocalStorageRemoveItem).toHaveBeenNthCalledWith(1,'access_token');
+      done();
+    });
   });
 
 

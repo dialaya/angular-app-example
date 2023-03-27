@@ -10,6 +10,7 @@ import { AuthenticationResult } from '../models/authentication-result';
   providedIn: 'root'
 })
 export class AuthService implements OnDestroy {
+  
   private readonly apiUrl = `${environment.apiBaseUrl}api/account`;
   private _timer: Subscription | null = null;
   private _loggedUser = new BehaviorSubject<AuthenticatedUser | null>(null);
@@ -79,6 +80,16 @@ export class AuthService implements OnDestroy {
         })
       )
       .subscribe();
+  }
+
+  login(usr: string, pwd: string) {
+    const cxnData = {username: usr, password: pwd};
+    return this.httpClient.post(this.apiUrl + '/login', cxnData)
+    .pipe(
+      map(result => {
+        return result;
+      })
+    );
   }
 
   refreshToken(): Observable<AuthenticationResult | null> {
